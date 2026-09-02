@@ -1,4 +1,5 @@
 using GripenLink.Api.Data;
+using GripenLink.Api.Services;
 using GripenLink.Core.Telemetry;
 using GripenLink.Core.Tracks;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ builder.Services.AddDbContext<GripenLinkDbContext>(options =>
     options.UseSqlite("Data Source=gripenlink.db"));
 
 builder.Services.AddSingleton<TrackManager>();
+builder.Services.AddHostedService<TelemetryIngestService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
