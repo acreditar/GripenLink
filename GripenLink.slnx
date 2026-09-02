@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GripenLink.Api/GripenLink.Api.csproj" />
+    <Project Path="src/GripenLink.Core/GripenLink.Core.csproj" />
+    <Project Path="src/GripenLink.DataLink/GripenLink.DataLink.csproj" />
+    <Project Path="src/GripenLink.Ingest/GripenLink.Ingest.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GripenLink.Tests/GripenLink.Tests.csproj" />
+  </Folder>
+</Solution>

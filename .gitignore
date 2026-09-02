@@ -1,0 +1,24 @@
+# Build output
+bin/
+obj/
+*.user
+*.suo
+
+# Banco local (SQLite)
+*.db
+*.db-shm
+*.db-wal
+
+# Node (web/)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
