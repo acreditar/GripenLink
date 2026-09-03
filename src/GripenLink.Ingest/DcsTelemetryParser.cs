@@ -21,12 +21,26 @@ public static class DcsTelemetryParser
         var altitude = GetDouble(root, "altitude");
         var heading = GetDouble(root, "heading");
         var speed = GetDouble(root, "speed");
+        var altitudeAgl = GetDouble(root, "altitudeAgl");
+        var ias = GetDouble(root, "ias");
+        var mach = GetDouble(root, "mach");
+        var vvi = GetDouble(root, "vvi");
+        var aoa = GetDouble(root, "aoa");
+        var g = GetDouble(root, "g");
+        var pitch = GetDouble(root, "pitch");
+        var bank = GetDouble(root, "bank");
+        var fuelInt = GetDouble(root, "fuelInt");
+        var fuelExt = GetDouble(root, "fuelExt");
+        var rpmL = GetDouble(root, "rpmL");
+        var rpmR = GetDouble(root, "rpmR");
 
         var timestamp = root.TryGetProperty("timestamp", out var ts) && ts.TryGetDateTimeOffset(out var t)
             ? t
             : DateTimeOffset.UtcNow;
 
-        return new TelemetrySample(callsign ?? "UNKNOWN", latitude, longitude, altitude, heading, speed, timestamp);
+        return new TelemetrySample(
+            callsign ?? "UNKNOWN", latitude, longitude, altitude, heading, speed, timestamp,
+            altitudeAgl, ias, mach, vvi, aoa, g, pitch, bank, fuelInt, fuelExt, rpmL, rpmR);
     }
 
     private static double GetDouble(JsonElement root, string property)

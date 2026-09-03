@@ -70,8 +70,20 @@ public class TrackManager
         track.Latitude = sample.Latitude;
         track.Longitude = sample.Longitude;
         track.AltitudeMeters = sample.AltitudeMeters;
+        track.AltitudeAglMeters = sample.AltitudeAglMeters;
         track.HeadingDegrees = sample.HeadingDegrees;
         track.SpeedMetersPerSecond = sample.SpeedMetersPerSecond;
+        track.IndicatedAirSpeedMps = sample.IndicatedAirSpeedMps;
+        track.MachNumber = sample.MachNumber;
+        track.VerticalVelocityMps = sample.VerticalVelocityMps;
+        track.AngleOfAttackDeg = sample.AngleOfAttackDeg;
+        track.GLoad = sample.GLoad;
+        track.PitchDeg = sample.PitchDeg;
+        track.BankDeg = sample.BankDeg;
+        track.FuelInternalKg = sample.FuelInternalKg;
+        track.FuelExternalKg = sample.FuelExternalKg;
+        track.EngineRpmLeft = sample.EngineRpmLeft;
+        track.EngineRpmRight = sample.EngineRpmRight;
         track.LastUpdateUtc = sample.TimestampUtc;
     }
 }
