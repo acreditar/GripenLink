@@ -3,104 +3,106 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>GRIPENLINK — ESTAÇÃO SOLO C2</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>GRIPENLINK — DDI / AMPCD</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="css/app.css"/>
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">
-    <span class="sigla">GRIPENLINK</span>
-    <span class="sub">ESTAÇÃO SOLO — C2 / F-39 • SJC</span>
-  </div>
-  <div class="status">
-    <span id="linkDot" class="dot off"></span><span id="linkTxt">LINK DCS: OFF</span>
-    <span class="sep">|</span>
-    <span id="clockZ">--:--:--Z</span>
-    <span class="sep">|</span>
-    <span id="callsignHdr">—</span>
-  </div>
+  <span class="brand">GRIPENLINK <em>ESTAÇÃO SOLO • C2</em></span>
+  <span class="status"><i id="linkDot"></i><span id="linkTxt">LINK OFF</span> <span id="clockZ">--:--:--Z</span> <span id="callsignHdr">—</span></span>
 </header>
 
-<div class="grid">
-  <!-- MDI LEFT -->
-  <section class="mdi left">
-    <div class="mdi-title"><span>◼</span> LEFT DDI — STORES / FUEL / GEAR</div>
-    <div class="mdi-body">
-      <div class="row label">COMBUSTÍVEL <span class="unit">KG</span></div>
-      <div class="fuel">
-        <div class="fuelbar"><div id="fuelIntBar" class="fill"></div></div>
-        <div class="fuelnums">
-          <span>INT <b id="fuelInt">—</b></span>
-          <span>EXT <b id="fuelExt">—</b></span>
-          <span>TOT <b id="fuelTot">—</b></span>
+<div class="cockpit">
+  <!-- LINHA TOP: LEFT DDI | UFC | RIGHT DDI -->
+  <div class="row top">
+    <!-- LEFT DDI — STORES / FUEL -->
+    <div class="ddi" id="ddiLeft">
+      <div class="bezel top"><span>POS/INS</span><span>UPDT</span><span>SCL/40</span><span>MK1</span><span>DATA</span></div>
+      <div class="bezel left"><span>TCN</span><span>ILS</span><span>MODE</span><span>VEC</span><span>ACL</span></div>
+      <div class="screen">
+        <div class="s-title">STORES • FUEL</div>
+        <div class="s-grid">
+          <div class="kv"><span>FUEL INT</span><b id="fuelInt">—</b><small>KG</small></div>
+          <div class="kv"><span>EXT</span><b id="fuelExt">—</b><small>KG</small></div>
+          <div class="kv"><span>TOT</span><b id="fuelTot">—</b><small>KG</small></div>
+          <div class="bar"><i id="fuelIntBar"></i></div>
+          <div class="sep"></div>
+          <div class="kv"><span>AAM</span><b id="storesAAM">—</b></div>
+          <div class="kv"><span>AGM/BOMBA</span><b id="storesAGM">—</b></div>
+          <div class="kv"><span>CHAFF</span><b id="chaff">—</b> <span>FLARE</span><b id="flare">—</b></div>
+          <div class="sep"></div>
+          <div class="kv ind"><span id="gearInd">GEAR —</span><span id="flapInd">FLAP —</span><span id="hookInd">HOOK —</span></div>
+          <div class="kv"><span>RPM L</span><b id="rpmL">—</b><small>%</small> <span>R</span><b id="rpmR">—</b></div>
         </div>
+        <div class="s-foot"><span>SENSORS</span><span id="stateBox">TENTATIVE</span><span>TIMEUFC AUTO</span></div>
       </div>
+      <div class="bezel right"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
+      <div class="bezel bottom"><span>BIT</span><span>HSEL</span><span>00L</span><span>SENSORS</span><span>CSEL</span></div>
+    </div>
 
-      <div class="row label">PAYLOAD / STORES</div>
-      <div id="stores" class="stores">— SEM DADOS —</div>
-
-      <div class="row label">CONTRA-MEDIDAS</div>
-      <div class="kv"><span>CHAFF</span><b id="chaff">—</b> <span>FLARE</span><b id="flare">—</b></div>
-
-      <div class="row label">TREM / FLAP / GANCHO</div>
-      <div class="kv gear">
-        <span id="gearInd" class="ind">GEAR —</span>
-        <span id="flapInd" class="ind">FLAP —</span>
-        <span id="hookInd" class="ind">HOOK —</span>
+    <!-- UFC -->
+    <div class="ufc">
+      <div class="ufc-row"><span class="lab">I/P</span><span class="val" id="ufcCallsign">—</span><span class="lab">BRT</span></div>
+      <div class="ufc-kbd">
+        <span>1</span><span>N</span><span>3</span><span>AIC</span>
+        <span>W 4</span><span>5</span><span>E 6</span><span>F/F1</span>
+        <span>7</span><span>S 8</span><span>9</span><span>F/F2</span>
+        <span>CLR</span><span>0</span><span>ENT</span><span>VOCA</span>
       </div>
-
-      <div class="row label">MOTOR</div>
-      <div class="kv"><span>RPM L</span><b id="rpmL">—</b> <span>RPM R</span><b id="rpmR">—</b></div>
+      <div class="ufc-mid"><span>A/P</span><span>IFF</span><span>TCN</span><span>ILS</span><span>D/L</span><span>BCN</span></div>
+      <div class="ufc-foot"><span id="ufcLat">—</span> <span id="ufcLon">—</span></div>
     </div>
-  </section>
 
-  <!-- MAP -->
-  <section class="mapwrap">
-    <div id="map"></div>
-    <div class="map-hud">
-      <span id="coordHud">—</span>
-      <span id="trailInfo">TRAIL 0 pts</span>
-    </div>
-  </section>
-
-  <!-- MDI RIGHT -->
-  <section class="mdi right">
-    <div class="mdi-title">RIGHT DDI — FLT DATA / NAV <span>◼</span></div>
-    <div class="mdi-body">
-      <div class="compass">
-        <div id="hdgRose" class="rose">◇</div>
-        <div class="hdgval"><b id="hdgVal">—</b><small>° HDG</small></div>
+    <!-- RIGHT DDI — FLT DATA -->
+    <div class="ddi" id="ddiRight">
+      <div class="bezel top"><span>IB1</span><span>SIL</span><span>ERASE</span><span>021°</span><span>20</span></div>
+      <div class="bezel left"><span>RWS</span><span>STT</span><span>AACQ</span><span>LTWS</span><span>—</span></div>
+      <div class="screen">
+        <div class="s-title">FLT DATA • NAV</div>
+        <div class="s-grid">
+          <div class="compass"><div id="hdgRose">◇</div><div><b id="hdgVal">—</b>° HDG</div></div>
+          <div class="kv"><span>ALT MSL</span><b id="altMsl">—</b><small>FT</small> <span>AGL</span><b id="altAgl">—</b><small>FT</small></div>
+          <div class="kv"><span>IAS</span><b id="ias">—</b><small>KT</small> <span>TAS</span><b id="tas">—</b><small>M/S</small></div>
+          <div class="kv"><span>MACH</span><b id="mach">—</b> <span>VVI</span><b id="vvi">—</b><small>FT/MIN</small></div>
+          <div class="kv"><span>AoA</span><b id="aoa">—</b>° <span>G</span><b id="gload">—</b> <span>P/B</span><b id="pb">—</b></div>
+          <div class="kv"><span>LAT</span><b id="latVal">—</b></div>
+          <div class="kv"><span>LON</span><b id="lonVal">—</b></div>
+        </div>
+        <div class="s-foot"><span id="coordHud">—</span><span id="trailInfo">TRAIL 0</span></div>
       </div>
-
-      <div class="kv big"><span>ALT MSL</span><b id="altMsl">—</b><small>ft</small></div>
-      <div class="kv"><span>AGL</span><b id="altAgl">—</b><small>ft</small> <span>MSL</span><b id="altMs">—</b><small>m</small></div>
-
-      <div class="kv big"><span>IAS</span><b id="ias">—</b><small>kt</small> <span>TAS</span><b id="tas">—</b><small>m/s</small></div>
-      <div class="kv"><span>MACH</span><b id="mach">—</b> <span>VVI</span><b id="vvi">—</b><small>ft/min</small></div>
-
-      <div class="kv"><span>AoA</span><b id="aoa">—</b><small>°</small> <span>G</span><b id="gload">—</b> <span>P/B</span><b id="pb">—</b></div>
-
-      <div class="kv"><span>LAT</span><b id="latVal">—</b> <span>LON</span><b id="lonVal">—</b></div>
-
-      <div id="stateBox" class="state tentative">STATE —</div>
+      <div class="bezel right"><span>MED</span><span>INTL</span><span>—</span><span>—</span><span>—</span></div>
+      <div class="bezel bottom"><span>MENU</span><span>140°</span><span>2354</span><span>CHAN</span><span>DATA</span></div>
     </div>
-  </section>
+  </div>
+
+  <!-- IFEI -->
+  <div class="ifei">
+    <span>RPM <b id="ifeiRpmL">—</b> <b id="ifeiRpmR">—</b></span>
+    <span>FUEL <b id="ifeiFuel">—</b></span>
+    <span>BINGO <b id="ifeiBingo">—</b></span>
+    <span id="ifeiTime">--:--:--</span>
+  </div>
+
+  <!-- AMPCD — MAPA -->
+  <div class="ampcd">
+    <div class="bezel top"><span>MAP</span><span>OCLTR</span><span>SCL/40</span><span>MK2</span><span>DCNTR</span></div>
+    <div class="bezel left"><span>—</span><span>—</span><span>—</span><span>—</span><span>GAIN</span></div>
+    <div class="screen map-screen"><div id="map"></div></div>
+    <div class="bezel right"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
+    <div class="bezel bottom"><span>STEP</span><span>TXDSG</span><span>AUTO</span><span>—</span><span>CONT</span></div>
+  </div>
+
+  <div class="strip">
+    <span>CALLSIGN <b id="fCallsign">—</b></span>
+    <span>TRACKS <b id="fTracks">0</b></span>
+    <span>SPD <b id="fSpd">—</b> M/S</span>
+    <span>HDG <b id="fHdg">—</b>°</span>
+    <span>ALT <b id="fAlt">—</b> M</span>
+    <span id="fTime">—</span>
+  </div>
 </div>
-
-<footer class="strip">
-  <span>CALLSIGN <b id="fCallsign">—</b></span>
-  <span>TRACKS <b id="fTracks">0</b></span>
-  <span>SPD <b id="fSpd">—</b> m/s</span>
-  <span>HDG <b id="fHdg">—</b>°</span>
-  <span>ALT <b id="fAlt">—</b> m</span>
-  <span>LAT <b id="fLat">—</b></span>
-  <span>LON <b id="fLon">—</b></span>
-  <span id="fTime">—</span>
-</footer>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/app.js"></script>
 </body>
