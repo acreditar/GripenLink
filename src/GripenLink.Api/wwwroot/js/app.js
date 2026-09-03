@@ -11,7 +11,7 @@ const fmt = {
 
 // Leaflet — carto dark, militar
 const map = L.map('map', {zoomControl:false, attributionControl:true}).setView([-23.18,-45.86], 11);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© CARTO • GripenLink', maxZoom:18}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM • GripenLink', maxZoom:18}).addTo(map);
 L.control.zoom({position:'topright'}).addTo(map);
 
 let trail = [];

@@ -52,11 +52,14 @@ public sealed class TelemetryIngestService : BackgroundService
             var sample = DcsTelemetryParser.ParseJson(buffer);
             var track = _manager.Upsert(sample);
 
-            // Persiste de forma best-effort (não bloqueia o loop UDP)
+            // Persiste best-effort — ignora erro de esquema antigo (coluna faltando)
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<GripenLinkDbContext>();
+                // Garante que o esquema está atualizado (recria se coluna nova faltar)
+                try { db.Database.EnsureCreated(); } catch { }
+
                 var record = db.Tracks.Find(track.Id);
                 if (record is null)
                 {
@@ -66,8 +69,20 @@ public sealed class TelemetryIngestService : BackgroundService
                 record.Latitude = track.Latitude;
                 record.Longitude = track.Longitude;
                 record.AltitudeMeters = track.AltitudeMeters;
+                record.AltitudeAglMeters = track.AltitudeAglMeters;
                 record.HeadingDegrees = track.HeadingDegrees;
                 record.SpeedMetersPerSecond = track.SpeedMetersPerSecond;
+                record.IndicatedAirSpeedMps = track.IndicatedAirSpeedMps;
+                record.MachNumber = track.MachNumber;
+                record.VerticalVelocityMps = track.VerticalVelocityMps;
+                record.AngleOfAttackDeg = track.AngleOfAttackDeg;
+                record.GLoad = track.GLoad;
+                record.PitchDeg = track.PitchDeg;
+                record.BankDeg = track.BankDeg;
+                record.FuelInternalKg = track.FuelInternalKg;
+                record.FuelExternalKg = track.FuelExternalKg;
+                record.EngineRpmLeft = track.EngineRpmLeft;
+                record.EngineRpmRight = track.EngineRpmRight;
                 record.LastUpdateUtc = track.LastUpdateUtc;
                 db.SaveChanges();
             }
