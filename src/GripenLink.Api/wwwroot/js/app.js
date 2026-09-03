@@ -75,9 +75,20 @@ function renderTrack(t){
   $('fuelIntBar').style.width = pct+"%";
   $('rpmL').textContent = fmt.f1(t.engineRpmLeft||0);
   $('rpmR').textContent = fmt.f1(t.engineRpmRight||0);
-  $('chaff').textContent = "—"; $('flare').textContent = "—";
-  $('stores').textContent = t.callsign+" — PAYLOAD (via LoGetPayloadInfo em breve)";
-  $('gearInd').textContent = "GEAR —"; $('flapInd').textContent = "FLAP —"; $('hookInd').textContent = "HOOK —";
+  if($('chaff')) $('chaff').textContent = "—"; if($('flare')) $('flare').textContent = "—";
+  if($('stores')) $('stores').textContent = t.callsign+" — PAYLOAD (via LoGetPayloadInfo em breve)";
+  if($('storesAAM')) $('storesAAM').textContent = "—";
+  if($('storesAGM')) $('storesAGM').textContent = "—";
+  if($('gearInd')) $('gearInd').textContent = "GEAR —"; if($('flapInd')) $('flapInd').textContent = "FLAP —"; if($('hookInd')) $('hookInd').textContent = "HOOK —";
+  // IFEI / UFC (espelham valores crus)
+  if($('ifeiRpmL')) $('ifeiRpmL').textContent = fmt.f1(t.engineRpmLeft||0);
+  if($('ifeiRpmR')) $('ifeiRpmR').textContent = fmt.f1(t.engineRpmRight||0);
+  if($('ifeiFuel')) $('ifeiFuel').textContent = fmt.i((t.fuelInternalKg||0)+(t.fuelExternalKg||0));
+  if($('ifeiBingo')) $('ifeiBingo').textContent = fmt.i(t.fuelInternalKg||0);
+  if($('ifeiTime')) $('ifeiTime').textContent = new Date(t.lastUpdateUtc).toLocaleTimeString('pt-BR');
+  if($('ufcCallsign')) $('ufcCallsign').textContent = t.callsign;
+  if($('ufcLat')) $('ufcLat').textContent = fmt.coord(t.latitude);
+  if($('ufcLon')) $('ufcLon').textContent = fmt.coord(t.longitude);
   const st = (t.state===0?"TENTATIVE": t.state===1?"CONFIRMED" : t.state===2?"COASTING":"DROPPED");
   const sb = $('stateBox'); sb.textContent = st; sb.className = "state "+st.toLowerCase();
   $('fTime').textContent = new Date(t.lastUpdateUtc).toLocaleTimeString('pt-BR');

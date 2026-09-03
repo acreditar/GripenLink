@@ -57,9 +57,6 @@ public sealed class TelemetryIngestService : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<GripenLinkDbContext>();
-                // Garante que o esquema está atualizado (recria se coluna nova faltar)
-                try { db.Database.EnsureCreated(); } catch { }
-
                 var record = db.Tracks.Find(track.Id);
                 if (record is null)
                 {
