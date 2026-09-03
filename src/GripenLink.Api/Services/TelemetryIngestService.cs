@@ -1,30 +1,38 @@
 using GripenLink.Api.Data;
+using GripenLink.Api.Hubs;
 using GripenLink.Core.Tracks;
 using GripenLink.Ingest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace GripenLink.Api.Services;
 
 /// <summary>
 /// Escuta telemetria UDP do DCS (Export.lua → 127.0.0.1:5310), converte em TelemetrySample
-/// e alimenta o TrackManager + SQLite. Fase 1.
+/// e alimenta o TrackManager. Transmite em tempo real via SignalR (push) e persiste no SQLite
+/// com throttle (~20 Hz) para não saturar disco/log.
 /// </summary>
 public sealed class TelemetryIngestService : BackgroundService
 {
     private readonly TrackManager _manager;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IHubContext<TracksHub> _hub;
     private readonly ILogger<TelemetryIngestService> _logger;
     private UdpTelemetryReceiver? _receiver;
 
     private const int Port = 5310;
+    private DateTimeOffset _lastFlush = DateTimeOffset.MinValue;
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromMilliseconds(50); // 20 Hz
 
     public TelemetryIngestService(
         TrackManager manager,
         IServiceScopeFactory scopeFactory,
+        IHubContext<TracksHub> hub,
         ILogger<TelemetryIngestService> logger)
     {
         _manager = manager;
         _scopeFactory = scopeFactory;
+        _hub = hub;
         _logger = logger;
     }
 
@@ -34,7 +42,7 @@ public sealed class TelemetryIngestService : BackgroundService
         _receiver.DatagramReceived += OnDatagram;
         _receiver.Start();
 
-        _logger.LogInformation("GripenLink ingest ouvindo em UDP {Port}", Port);
+        _logger.LogInformation("GripenLink ingest ouvindo em UDP {Port} (push SignalR)", Port);
 
         stoppingToken.Register(() =>
         {
@@ -52,48 +60,69 @@ public sealed class TelemetryIngestService : BackgroundService
             var sample = DcsTelemetryParser.ParseJson(buffer);
             var track = _manager.Upsert(sample);
 
-            // Persiste best-effort — ignora erro de esquema antigo (coluna faltando)
-            try
+            // throttle: só persiste + transmite a cada 50ms (20 Hz)
+            if (DateTimeOffset.UtcNow - _lastFlush < FlushInterval)
             {
-                using var scope = _scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<GripenLinkDbContext>();
-                var record = db.Tracks.Find(track.Id);
-                if (record is null)
-                {
-                    record = new TrackRecord { Id = track.Id, Callsign = track.Callsign };
-                    db.Tracks.Add(record);
-                }
-                record.Latitude = track.Latitude;
-                record.Longitude = track.Longitude;
-                record.AltitudeMeters = track.AltitudeMeters;
-                record.AltitudeAglMeters = track.AltitudeAglMeters;
-                record.HeadingDegrees = track.HeadingDegrees;
-                record.SpeedMetersPerSecond = track.SpeedMetersPerSecond;
-                record.IndicatedAirSpeedMps = track.IndicatedAirSpeedMps;
-                record.MachNumber = track.MachNumber;
-                record.VerticalVelocityMps = track.VerticalVelocityMps;
-                record.AngleOfAttackDeg = track.AngleOfAttackDeg;
-                record.GLoad = track.GLoad;
-                record.PitchDeg = track.PitchDeg;
-                record.BankDeg = track.BankDeg;
-                record.FuelInternalKg = track.FuelInternalKg;
-                record.FuelExternalKg = track.FuelExternalKg;
-                record.EngineRpmLeft = track.EngineRpmLeft;
-                record.EngineRpmRight = track.EngineRpmRight;
-                record.LastUpdateUtc = track.LastUpdateUtc;
-                db.SaveChanges();
+                return;
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Falha ao persistir track {Callsign}", sample.Callsign);
-            }
+            _lastFlush = DateTimeOffset.UtcNow;
 
-            _logger.LogDebug("Track {Callsign} @ {Lat:F5},{Lon:F5} hdg {Hdg:F0} spd {Spd:F0}",
-                track.Callsign, track.Latitude, track.Longitude, track.HeadingDegrees, track.SpeedMetersPerSecond);
+            Persist(track);
+            _ = BroadcastAsync();
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Datagrama inválido ({Bytes} bytes)", buffer.Length);
+        }
+    }
+
+    private void Persist(Track track)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<GripenLinkDbContext>();
+            var record = db.Tracks.Find(track.Id);
+            if (record is null)
+            {
+                record = new TrackRecord { Id = track.Id, Callsign = track.Callsign };
+                db.Tracks.Add(record);
+            }
+            record.Latitude = track.Latitude;
+            record.Longitude = track.Longitude;
+            record.AltitudeMeters = track.AltitudeMeters;
+            record.AltitudeAglMeters = track.AltitudeAglMeters;
+            record.HeadingDegrees = track.HeadingDegrees;
+            record.SpeedMetersPerSecond = track.SpeedMetersPerSecond;
+            record.IndicatedAirSpeedMps = track.IndicatedAirSpeedMps;
+            record.MachNumber = track.MachNumber;
+            record.VerticalVelocityMps = track.VerticalVelocityMps;
+            record.AngleOfAttackDeg = track.AngleOfAttackDeg;
+            record.GLoad = track.GLoad;
+            record.PitchDeg = track.PitchDeg;
+            record.BankDeg = track.BankDeg;
+            record.FuelInternalKg = track.FuelInternalKg;
+            record.FuelExternalKg = track.FuelExternalKg;
+            record.EngineRpmLeft = track.EngineRpmLeft;
+            record.EngineRpmRight = track.EngineRpmRight;
+            record.LastUpdateUtc = track.LastUpdateUtc;
+            db.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Falha ao persistir track {Callsign}", track.Callsign);
+        }
+    }
+
+    private async Task BroadcastAsync()
+    {
+        try
+        {
+            await _hub.Clients.All.SendAsync("TracksUpdate", _manager.Tracks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Falha ao transmitir via SignalR");
         }
     }
 }

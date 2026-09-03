@@ -1,4 +1,5 @@
 using GripenLink.Api.Data;
+using GripenLink.Api.Hubs;
 using GripenLink.Api.Services;
 using GripenLink.Core.Telemetry;
 using GripenLink.Core.Tracks;
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<GripenLinkDbContext>(options =>
 
 builder.Services.AddSingleton<TrackManager>();
 builder.Services.AddHostedService<TelemetryIngestService>();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -26,6 +28,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapHub<TracksHub>("/tracksHub");
 
 app.MapGet("/", () => Results.Ok(new
 {
